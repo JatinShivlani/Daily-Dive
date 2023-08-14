@@ -1,74 +1,70 @@
-import React, { Component } from 'react'
+import React, {useState, useEffect } from 'react'
 import Newsitem from './Newsitem'
 import Spinner from './Spinner';
 
 
 
-export default class News extends Component {
+const News=(props)=>{
+
+    const[article,setArcticle]=useState([]);
+    const[page,setPage]=useState(1);
+    const[loading,setLoading]=useState(false);
+    const[totalResult,setTotalResult]=useState(0);
+   
     
-
-
-    constructor(props) {
-        super(props);
-        this.state = {
-            article: [],
-            loading: false,
-            page: 1,
-            totalResult: 0
-        }
-    }
-    updateNews = async () => {
-        let url = `https://newsapi.org/v2/top-headlines?country=in&category=${this.props.category}&apiKey=${this.props.apiKey}&page=${this.state.page}&pageSize=${this.props.size}`
-        this.setState({ loading: true })
-        this.props.progress(10)
+    
+    const updateNews = async (pageNo) => {
+        let url = `https://newsapi.org/v2/top-headlines?country=in&category=${props.category}&apiKey=${props.apiKey}&page=${pageNo}&pageSize=${props.size}`
+        setLoading( true );
+        props.progress(10)
         let data = await fetch(url);
-        this.props.progress(50)
+        props.progress(50)
         let parsedData = await data.json();
-        this.props.progress(100)
-        this.setState({
-            article: parsedData.articles,
-            totalResult: parsedData.totalResults,
-            loading: false
-        })
+        props.progress(100)
+        setArcticle(parsedData.articles)
+        setTotalResult(parsedData.totalResults)
+        setLoading(false)
     }
-    async componentDidMount() {
-        this.updateNews();
-    }
-    prevClick = async () => {
-        this.setState({
-            page: this.state.page - 1
-        })
-        this.updateNews()
+    useEffect(()=>{
+      updateNews(page);
+      // eslint-disable-next-line
+    },[])
+    
+   const prevClick =  () => {
+    setPage(page- 1)
+    updateNews(page - 1)
+    console.log(page)
 
     }
-    nextClick = async () => {
-        this.setState({
-            page: this.state.page + 1
-        })
-        this.updateNews()
+    const nextClick = () => {
+        setPage(page +1)
+        updateNews(page +1)
+        console.log(page)
 
     }
-capitalize=(string)=>{
+const capitalize=(string)=>{
 return string.slice(0,1).toUpperCase() + string.slice(1,string.length).toLowerCase()
 }
-    render() {
+    
         return (<>
             <div className="container">
                 <div className="row">
-                    <h1 className="my-5 text-center">Daily Dive- Top {this.capitalize(this.props.category)} headlines</h1>
-                    {this.state.loading && <Spinner />}
-                    {!this.state.loading && this.state.article.map((element) => {
+                    <h1 className="my-5 text-center">Daily Dive- Top {capitalize(props.category)} headlines</h1>
+                    {loading && <Spinner />}
+                    {!loading && article.map((element) => {
                         return <div key={element.url} className="col-md-4 my-4 ">
                             <Newsitem title={element.title} description={element.description} imageUrl={element.urlToImage} url={element.url} author={element.author} time={element.publishedAt} source={element.source.name} />
                         </div>
                     })}
                 </div>
                 <div className="d-flex justify-content-between container my-3">
-                    <button disabled={this.state.page <= 1} onClick={this.prevClick} className="btn btn-dark"> &larr; Perv</button>
-                    <button disabled={this.state.page + 1 > Math.ceil(this.state.totalResult / this.props.size)} onClick={this.nextClick} className="btn btn-dark">Next &rarr;</button>
+                    <button disabled={page <= 1} onClick={prevClick} className="btn btn-dark"> &larr; Perv</button>
+                    <button disabled={page + 1 > Math.ceil(totalResult / props.size)} onClick={nextClick} className="btn btn-dark">Next &rarr;</button>
                 </div>
 
             </div>
         </>)
-    }
-}
+    
+
+                }
+                export default News;
